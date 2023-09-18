@@ -5,12 +5,14 @@ from tabulate import tabulate
 folio_actual = 0
 
 class Nota:
-    def __init__(self, cliente, fecha):
+    def __init__(self, cliente, fecha, rfc, correo):
         global folio_actual
         folio_actual += 1
         self.folio = folio_actual
         self.fecha = fecha
         self.cliente = cliente
+        self.rfc = rfc
+        self.correo = correo
         self.servicios = []
         self.cancelada = False
 
@@ -32,6 +34,8 @@ def imprimir_nota(nota):
     print(f"Folio: {nota.folio}")
     print(f"Fecha: {nota.fecha}")
     print(f"Cliente: {nota.cliente}")
+    print(f"RFC: {nota.rfc}")
+    print(f"Correo: {nota.correo}")
     print("--------------------------------")
     print("Servicio:")
     for servicio in nota.servicios:
@@ -52,6 +56,27 @@ def validar_continuidad(mensaje):
             return True
         else:
             print("\nLa respuesta ingresada debe ser 'Si' o 'No'.")
+
+def validar_rfc(rfc):
+    if len(rfc) not in [13]:
+        return False
+    if not rfc[:4].isalpha():
+        return False
+    if not rfc[4:10].isdigit():
+        return False
+    if not rfc[10:].isalnum():
+        return False
+    return True
+
+def validar_correo(correo):
+    partes = correo.split('@')
+    if len(partes) !=2:
+        return False
+    if not partes[0].isalnum():
+        return False
+    if '.' not in partes[1]:
+        return False
+    return True
 
 notas = []
 
@@ -82,8 +107,30 @@ def registrar_nota():
         continue
       else:
         break
-      
-    nota = Nota(cliente,fecha)
+    
+    while True:
+        rfc = input("\nIngrese RFC del cliente: ")
+        if rfc == "":
+            print("\n* INGRESE UN RFC PARA EL REGISTRO DE LA NOTA *")
+            continue
+        elif not validar_rfc(rfc):
+            print("\n* RFC NO VALIDO, INGRESE NUEVAMENTE *")
+            continue
+        else:
+            break
+    
+    while True:
+        correo = input("\nIngrese el correo del cliente: ")
+        if correo == "":
+            print("\n* INGRESE UN CORREO PARA EL REGISTRO DE LA NOTA *")
+            continue
+        elif not validar_correo(correo):
+            print("\n* CORREO NO VALIDO, INGRESE NUEVAMENTE *")
+            continue
+        else:
+            break
+
+    nota = Nota(cliente,fecha,rfc,correo)
 
     servicio_agregado = False
     while True:
