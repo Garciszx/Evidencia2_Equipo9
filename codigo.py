@@ -1,6 +1,7 @@
 import datetime
 import re
 from tabulate import tabulate
+import pandas as pd
 
 folio_actual = 0
 
@@ -80,6 +81,7 @@ def validar_correo(correo):
 
 notas = []
 
+rfc_registrados = set()
 def registrar_nota():    
 
     hoy = datetime.date.today()
@@ -116,7 +118,11 @@ def registrar_nota():
         elif not validar_rfc(rfc):
             print("\n* RFC NO VALIDO, INGRESE NUEVAMENTE *")
             continue
+        elif rfc in rfc_registrados:
+            print("\n* RFC YA REGISTRADO, INGRESE NUEVAMENTE *")
+            continue
         else:
+            rfc_registrados.add(rfc)
             break
     
     while True:
@@ -176,25 +182,44 @@ def consulta_por_periodo():
     if confirmar.lower() != "si":
         print("\nNo se realizara ninguna consulta.")
         return
+    
     while True:
+        fecha_inicial = input("\nIngresa la fecha inicial (dd/mm/aaaa): ")
+        if fecha_inicial == "":
+            fecha_inicial = "01/01/2000"
+            print("\nPor omision de fecha inicial se asume 01/01/2000.")
+    
+        fecha_final = input("\nIngresa la fecha final (dd/mm/aaaa): ")
+        if fecha_final == "":
+            fecha_final = datetime.date.today().strftime("%d/%m/%Y")
+            print("\nPor omision de fecha final se asume la fecha actual. ")
+
         try:
-            fecha_inicial = input("\nIngresa la fecha inicial (dd/mm/aaaa): ")
-            fecha_final = input("Ingresa la fecha final (dd/mm/aaaa): ")
             fecha_inicial = datetime.datetime.strptime(fecha_inicial, "%d/%m/%Y").date()
             fecha_final = datetime.datetime.strptime(fecha_final, "%d/%m/%Y").date()
         except Exception:
             print("\n* LAS FECHAS INGRESADAS DEBEN ESTAR EN FORMATO dd/mm/yyyy *")
-        else: 
-            notas_no_canceladas = [n for n in notas if not n.cancelada]
-            notas_por_periodo = [n for n in notas_no_canceladas if fecha_inicial <= n.fecha  <= fecha_final]
-            if notas_por_periodo:
-                print("\n---------NOTAS POR PERIODO---------")
-                informacion = [[n.folio, n.fecha, n.cliente] for n in notas_por_periodo]
-                titulos = ["Folio", "Fecha", "Cliente"]
-                print(tabulate(informacion, titulos, tablefmt="fancy_grid"))
-            else:
-                print("\n* NO SE ENCUENTRAN NOTAS EN PERIODO SOLICITADO *")
+            continue
+        
+        if fecha_final < fecha_inicial:
+            print("\n* LA FECHA FINAL NO PUEDE SER ANTERIOR A LA FECHA INICIAL *")
+            continue
+        else:
             break
+    
+    notas_no_canceladas = [n for n in notas if not n.cancelada]
+    notas_por_periodo = [n for n in notas_no_canceladas if fecha_inicial <= n.fecha  <= fecha_final]
+    if notas_por_periodo:
+        print("\n---------------------------NOTAS POR PERIODO-------------------------")
+        informacion = [[n.folio, n.fecha, n.cliente, n.rfc, n.correo] for n in notas_por_periodo]
+        titulos = ["Folio", "Fecha", "Cliente", "RFC", "Correo"]
+        print(tabulate(informacion, titulos, tablefmt="fancy_grid"))
+        monto = [servicios.costo for nota in notas_por_periodo for servicios in nota.servicios]
+        monto_promedio = pd.Series(monto).mean()
+        informacion = [["Monto promedio", monto_promedio]]
+        print(tabulate(informacion, tablefmt="fancy_grid"))
+    else:
+        print("\n* NO SE ENCUENTRAN NOTAS EN PERIODO SOLICITADO *")
 
 def consulta_por_folio():
     confirmar = input("\n¿Deseas realizar una consulta por folio? (Solamente Si/No): ")
@@ -257,8 +282,8 @@ def recuperar_nota():
     notas_canceladas = [nota for nota in notas if nota.cancelada]
     if notas_canceladas:
         print("\n---------NOTAS CANCELADAS---------")
-        informacion = [[n.folio, n.fecha, n.cliente] for n in notas_canceladas]
-        titulos = ["Folio", "Fecha", "Cliente"]
+        informacion = [[n.folio, n.fecha, n.cliente, n.rfc, n.correo] for n in notas_canceladas]
+        titulos = ["Folio", "Fecha", "Cliente", "RFC", "Correo"]
         print(tabulate(informacion, titulos, tablefmt="fancy_grid"))
         
     while True:
