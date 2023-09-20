@@ -2,6 +2,7 @@ import datetime
 import re
 from tabulate import tabulate
 import pandas as pd
+import csv
 
 folio_actual = 0
 
@@ -16,6 +17,37 @@ class Nota:
         self.correo = correo
         self.servicios = []
         self.cancelada = False
+
+    def guardar_notas_csv():
+        with open('notas.csv', 'w', newline='') as csvfile:
+            fieldnames = ['folio', 'fecha', 'cliente', 'rfc', 'correo', 'cancelada']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for nota in notas:
+                writer.writerow({
+                    'folio': nota.folio,
+                    'fecha': nota.fecha,
+                    'cliente' : nota.cliente,
+                    'rfc': nota.rfc, 
+                    'correo': nota.correo,
+                    'cancelada': nota.cancelada
+                })
+
+    def cargar_notas_csv():
+        try:
+            with open('notas.csv', newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    cliente = row['cliente']
+                    fecha = datetime.datetime.strptime(row['fecha'], "%Y-%m-%d").date()
+                    rfc = row['rfc']
+                    correo = row['correo']
+                    cancelada = row['cancelada'] == 'True'
+                    nota = Nota(cliente, fecha, rfc, correo)
+                    nota.cancelada = cancelada
+                    notas.append(nota)
+        except FileNotFoundError:
+            print("NO HAY NINGUN ARCHIVO CSV ANTERIOR POR LO QUE SE COMENZARÁ DESDE UN ESTADO VACIO. ")
 
     def agregar_servicio(self, servicio):
         self.servicios.append(servicio)
@@ -299,6 +331,8 @@ print("\n---------------TALLER MECANICO--------------")
 print("   BIENVENIDO A NUESTRO SISTEMA DE NOTAS    ")
 print("--------------------------------------------")
 
+cargar_notas_csv()
+
 while True:
     print("\nMENU")
     print("1. Registrar nota")
@@ -341,6 +375,7 @@ while True:
 
     elif opcion == "5":
          if validar_continuidad("\n¿Deseas salir del programa?"):
+             guardar_notas_csv()
             ("\nDe acuerdo. Saliendo del programa...")
             break
     else:
