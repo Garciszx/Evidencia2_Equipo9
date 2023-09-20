@@ -58,27 +58,6 @@ def validar_continuidad(mensaje):
         else:
             print("\nLa respuesta ingresada debe ser 'Si' o 'No'.")
 
-def validar_rfc(rfc):
-    if len(rfc) not in [13]:
-        return False
-    if not rfc[:4].isalpha():
-        return False
-    if not rfc[4:10].isdigit():
-        return False
-    if not rfc[10:].isalnum():
-        return False
-    return True
-
-def validar_correo(correo):
-    partes = correo.split('@')
-    if len(partes) !=2:
-        return False
-    if not partes[0].isalnum():
-        return False
-    if '.' not in partes[1]:
-        return False
-    return True
-
 notas = []
 
 rfc_registrados = set()
@@ -115,7 +94,7 @@ def registrar_nota():
         if rfc == "":
             print("\n* INGRESE UN RFC PARA EL REGISTRO DE LA NOTA *")
             continue
-        elif not validar_rfc(rfc):
+        elif re.search('^[A-Z]{3,4}[0-9]{6}[A-Z0-9]{3}$', rfc) is None:
             print("\n* RFC NO VALIDO, INGRESE NUEVAMENTE *")
             continue
         elif rfc in rfc_registrados:
@@ -130,7 +109,7 @@ def registrar_nota():
         if correo == "":
             print("\n* INGRESE UN CORREO PARA EL REGISTRO DE LA NOTA *")
             continue
-        elif not validar_correo(correo):
+        elif re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', correo) is None:
             print("\n* CORREO NO VALIDO, INGRESE NUEVAMENTE *")
             continue
         else:
