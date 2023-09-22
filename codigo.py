@@ -374,8 +374,8 @@ while True:
             recuperar_nota()
 
     elif opcion == "5":
-         if validar_continuidad("\n¿Deseas salir del programa?"):
-             guardar_notas_csv()
+        if validar_continuidad("\n¿Deseas salir del programa?"):
+            guardar_notas_csv()
             ("\nDe acuerdo. Saliendo del programa...")
             break
     else:
